@@ -11,7 +11,7 @@ build-job:
     - aws eks update-kubeconfig --name $EKS_CLUSTER
     - aws ecr get-login-password --region us-east-1 | docker login --username AWS --password-stdin 961341555113.dkr.ecr.us-east-1.amazonaws.com
     - REPOSITORY_URI=961341555113.dkr.ecr.us-east-1.amazonaws.com/upload-service
-    - IMAGE_TAG=build-$(echo $CI_COMMIT_SHORT_SHA)  # Use CI_COMMIT_SHORT_SHA
+    - IMAGE_TAG=build-$CI_COMMIT_SHORT_SHA
     - docker build -t $REPOSITORY_URI:latest .
     - docker tag $REPOSITORY_URI:latest $REPOSITORY_URI:$IMAGE_TAG
     - echo "Build completed."
