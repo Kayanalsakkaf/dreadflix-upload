@@ -32,13 +32,14 @@ build-job:       # This job runs in the build stage, which runs first.
   image: amazon/aws-cli:latest
   script:
     - echo "Compiling the code..."
+    - aws eks update-kubeconfig --name $EKS_CLUSTER 
     - aws ecr get-login-password --region us-east-1 | docker login --username AWS --password-stdin 961341555113.dkr.ecr.us-east-1.amazonaws.com
     - REPOSITORY_URI=961341555113.dkr.ecr.us-east-1.amazonaws.com/upload-service
     - IMAGE_TAG=build-$(echo $CODEBUILD_BUILD_ID | awk -F":" '{print $2}')
     - docker build -t $REPOSITORY_URI:latest  . 
     - docker tag $REPOSITORY_URI:latest $REPOSITORY_URI:$IMAGE_TAG
-
-
+    - echo "Build completed."
+    
 unit-test-job:   # This job runs in the test stage.
   stage: test    # It only starts when the job in the build stage completes successfully.
   script:
