@@ -1,53 +1,42 @@
-variables:  # This defines global variables for your pipeline
-  EKS_CLUSTER: "funny-metal-potato"
-  DEPLOYMENT: "deployment/upload-service-deployment"
-  CONTAINER: "upload-service"
-  NAME_SPACE: "default"    
-  AWS_REGION: "us-east-1"
-  ECR_REPOSITORY_URI: "961341555113.dkr.ecr.us-east-1.amazonaws.com/upload-service"
-
-stages:          # List of stages for jobs, and their order of execution
+stages:
   - build
   - test
   - deploy
 
-build-job:       # This job runs in the build stage, which runs first.
+build-job:
   stage: build
   image: amazon/aws-cli:latest
-  before_script:
-    - apt-get update && apt-get install -y jq docker.io  # Install Docker and jq for any CLI parsing
   script:
     - echo "Compiling the code..."
-    - aws eks update-kubeconfig --name $EKS_CLUSTER --region $AWS_REGION
-    - aws ecr get-login-password --region $AWS_REGION | docker login --username AWS --password-stdin $ECR_REPOSITORY_URI
-    - IMAGE_TAG="build-$(echo $CODEBUILD_BUILD_ID | awk -F":" '{print $2}')"
-    - docker build -t $ECR_REPOSITORY_URI:latest .
-    - docker tag $ECR_REPOSITORY_URI:latest $ECR_REPOSITORY_URI:$IMAGE_TAG
+    - aws eks update-kubeconfig --name $EKS_CLUSTER
+    - aws ecr get-login-password --region us-east-1 | docker login --username AWS --password-stdin 961341555113.dkr.ecr.us-east-1.amazonaws.com
+    - REPOSITORY_URI=961341555113.dkr.ecr.us-east-1.amazonaws.com/upload-service
+    - IMAGE_TAG=build-$(echo $CI_COMMIT_SHORT_SHA)  # Use CI_COMMIT_SHORT_SHA
+    - docker build -t $REPOSITORY_URI:latest .
+    - docker tag $REPOSITORY_URI:latest $REPOSITORY_URI:$IMAGE_TAG
     - echo "Build completed."
-    
-unit-test-job:   # This job runs in the test stage.
-  stage: test    # It only starts when the job in the build stage completes successfully.
+
+unit-test-job:
+  stage: test
   script:
     - echo "Running unit tests... This will take about 60 seconds."
     - sleep 10
     - echo "Code coverage is 90%"
 
-lint-test-job:   # This job also runs in the test stage.
-  stage: test    # It can run at the same time as unit-test-job (in parallel).
+lint-test-job:
+  stage: test
   script:
     - echo "Linting code... This will take about 10 seconds."
     - sleep 10
     - echo "No lint issues found."
 
-deploy-job:      # This job runs in the deploy stage.
-  stage: deploy  # It only runs when *both* jobs in the test stage complete successfully.
+deploy-job:
+  stage: deploy
   environment: production
   script:
     - echo "Deploying application..."
-    - docker push $ECR_REPOSITORY_URI --all-tags
+    - docker push $REPOSITORY_URI --all-tags
     - echo "Update Kube Config"
-    - aws eks update-kubeconfig --region $AWS_REGION --name $EKS_CLUSTER
-    - kubectl version
-    - echo "Start the new deployment"
-    - kubectl set image $DEPLOYMENT $CONTAINER=$ECR_REPOSITORY_URI:latest -n $NAME_SPACE
+    - aws eks update-kubeconfig --region us-east-1 --name $EKS_CLUSTER  # Use us-east-1
+    - kubectl set image deployment/$DEPLOYMENT $CONTAINER=$REPOSITORY_URI:$IMAGE_TAG -n $NAME_SPACE  # Use IMAGE_TAG
     - echo "Application successfully deployed."
