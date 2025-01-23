@@ -2,6 +2,12 @@ stages:
   - build
   - test
   - deploy
+  
+variables:  # This defines global variables for your pipeline
+  EKS_CLUSTER: "funny-metal-potato"
+  DEPLOYMENT: "deployment/upload-service-deployment"
+  CONTAINER: "upload-service"
+  NAME_SPACE: "default"
 
 build-job:
   stage: build
