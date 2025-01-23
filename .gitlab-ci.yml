@@ -2,25 +2,27 @@ stages:
   - build
   - test
   - deploy
-  
-variables:  # This defines global variables for your pipeline
-  EKS_CLUSTER: "funny-metal-potato"
+
+variables:
+  EKS_CLUSTER: "funny-metal-potato"  # Replace with your EKS cluster name
   DEPLOYMENT: "deployment/upload-service-deployment"
   CONTAINER: "upload-service"
   NAME_SPACE: "default"
+  REGION: "us-east-1"  # Replace with your AWS region
 
-build-job:
+build_job:
   stage: build
   image: amazon/aws-cli:latest
   script:
-    - echo "Compiling the code..."
-    - aws eks update-kubeconfig --name $EKS_CLUSTER
-    - aws ecr get-login-password --region us-east-1 | docker login --username AWS --password-stdin 961341555113.dkr.ecr.us-east-1.amazonaws.com
-    - REPOSITORY_URI=961341555113.dkr.ecr.us-east-1.amazonaws.com/upload-service
+    - set -x  # Enable verbose logging for debugging
+    - echo "Building the Docker image..."
+    - aws ecr get-login-password --region $REGION | docker login --username AWS --password-stdin $AWS_ACCOUNT_ID.dkr.ecr.$REGION.amazonaws.com
+    - REPOSITORY_URI=$AWS_ACCOUNT_ID.dkr.ecr.$REGION.amazonaws.com/upload-service
     - IMAGE_TAG=build-$CI_COMMIT_SHORT_SHA
     - docker build -t $REPOSITORY_URI:latest .
     - docker tag $REPOSITORY_URI:latest $REPOSITORY_URI:$IMAGE_TAG
-    - echo "Build completed."
+    - docker push $REPOSITORY_URI:$IMAGE_TAG
+    - echo "Docker image built and pushed successfully."
 
 unit-test-job:
   stage: test
@@ -36,13 +38,11 @@ lint-test-job:
     - sleep 10
     - echo "No lint issues found."
 
-deploy-job:
+deploy_job:
   stage: deploy
-  environment: production
+  image: amazon/aws-cli:latest
   script:
-    - echo "Deploying application..."
-    - docker push $REPOSITORY_URI --all-tags
-    - echo "Update Kube Config"
-    - aws eks update-kubeconfig --region us-east-1 --name $EKS_CLUSTER  # Use us-east-1
+    - echo "Deploying to EKS..."
+    - aws eks update-kubeconfig --name $EKS_CLUSTER --region $REGION 
     - kubectl set image deployment/$DEPLOYMENT $CONTAINER=$REPOSITORY_URI:$IMAGE_TAG -n $NAME_SPACE  # Use IMAGE_TAG
     - echo "Application successfully deployed."
