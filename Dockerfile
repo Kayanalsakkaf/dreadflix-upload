@@ -18,3 +18,12 @@ EXPOSE 3001
 
 # Step 7: Specify the command to run the app (make sure your start script is defined in package.json)
 CMD ["npm", "start"]
+
+
+FROM golang:latest
+WORKDIR /app
+COPY go.mod go.sum ./
+RUN go mod download
+COPY . .
+CMD ["go", "run", "main.go"]
+EXPOSE 8080
