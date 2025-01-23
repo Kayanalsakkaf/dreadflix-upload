@@ -15,12 +15,12 @@
 # https://docs.gitlab.com/ee/development/cicd/templates.html
 # This specific template is located at:
 # https://gitlab.com/gitlab-org/gitlab/-/blob/master/lib/gitlab/ci/templates/Getting-Started.gitlab-ci.yml
-env:
-  variables:
-    EKS_CLUSTER: "funny-metal-potato"
-    DEPLOYMENT: "deployment/upload-service-deployment"
-    CONTAINER: "upload-service"
-    NAME_SPACE: "default"
+
+variables:  # This defines global variables for your pipeline
+  EKS_CLUSTER: "funny-metal-potato"
+  DEPLOYMENT: "deployment/upload-service-deployment"
+  CONTAINER: "upload-service"
+  NAME_SPACE: "default"    
 
 stages:          # List of stages for jobs, and their order of execution
   - build
