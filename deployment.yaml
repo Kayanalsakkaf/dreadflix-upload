@@ -1,0 +1,39 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: upload-video-deployment
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: upload-video-svc
+  template:
+    metadata:
+      labels:
+        app: upload-video-svc
+    spec:
+      containers:
+      - name: upload-video-svc
+        image: 761018885655.dkr.ecr.eu-west-2.amazonaws.com/mindcast/uploadvideo:latest
+        ports:
+        - containerPort: 3001
+      volumes:
+        - name: secret-volume
+          secret:
+            secretName: upload-video-secrets
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: upload-video-service
+  namespace: default
+  labels:
+    app: upload-video-service
+spec:
+  selector:
+    app: upload-video-svc
+  ports:
+    - protocol: TCP
+      port: 3001
+      targetPort: 3001
+  type: NodePort
