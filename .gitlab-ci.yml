@@ -17,9 +17,11 @@ build_job:
     - set -x  # Enable verbose logging for debugging
     - echo "Building the Docker image..."
     - aws ecr get-login-password --region $REGION | docker login --username AWS --password-stdin $AWS_ACCOUNT_ID.dkr.ecr.$REGION.amazonaws.com
+    - echo "ECR login complete."
     - REPOSITORY_URI=$AWS_ACCOUNT_ID.dkr.ecr.$REGION.amazonaws.com/upload-service
     - IMAGE_TAG=build-$CI_COMMIT_SHORT_SHA
     - docker build -t $REPOSITORY_URI:latest .
+    - echo "build complete."
     - docker tag $REPOSITORY_URI:latest $REPOSITORY_URI:$IMAGE_TAG
     - docker push $REPOSITORY_URI:$IMAGE_TAG
     - echo "Docker image built and pushed successfully."
