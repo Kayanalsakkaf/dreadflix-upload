@@ -24,8 +24,6 @@ build:
     - docker --version
   script:
     - aws ecr get-login-password | docker login --username AWS --password-stdin 961341555113.dkr.ecr.us-east-1.amazonaws.com #account name is AccountnameDREAD?
-    - docker build -t $AWS_REPO:TAG . 
-    - docker push $AWS_REPO:TAG
   allow_failure: true
 
 #2.0 - Testing the service
@@ -57,9 +55,6 @@ deploy app on EKS:
     - amazon-linux-extras install docker
     - aws --version
     - docker --version
-    - curl -O https://s3.us-west-2.amazonaws.com/amazon-eks/1.29.0/2024-01-04/bin/linux/amd64/kubectl
-    - chmod +x ./kubectl
-    - mkdir -p $HOME/bin && cp ./kubectl $HOME/bin/kubectl && export PATH=$HOME/bin:$PATH
     - echo 'export PATH=$HOME/bin:$PATH' >> ~/.bashrc
     - kubectl version --client
     - export AWS_ACCESS_KEY_ID=${AWS_ACCESS_KEY_ID}
@@ -68,6 +63,5 @@ deploy app on EKS:
   script:
     - aws eks update-kubeconfig --region us-east-1 --name $CLUSTER_NAME
     - cd kubernetes-files
-    - kubectl apply -f deployment.yaml    #Deploys the docker image
     - kubectl rollout status deployments
   allow_failure: true
