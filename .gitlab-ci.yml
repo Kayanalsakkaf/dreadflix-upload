@@ -1,6 +1,6 @@
 variables:
   AWS_REPO: ${REGISTRY_IMAGE}/upload-service #change accordingly
-  DOCKER_HOST: tcp://docker:3001
+  #DOCKER_HOST: tcp://docker:3001
   CLUSTER_NAME: funny-metal-potato
   TAG: latest
 stages:
@@ -17,12 +17,14 @@ build:
   services:
     - docker:dind
   before_script:
+    - aws configure set aws_access_key_id $AWS_ACCESS_KEY_ID
+    - aws configure set aws_secret_access_key $AWS_SECRET_ACCESS_KEY
     - amazon-linux-extras install docker
     - aws --version
     - docker --version
   script:
-    - docker build -t $AWS_REPO:TAG . 
     - aws ecr get-login-password | docker login --username AWS --password-stdin ${REGISTRY_IMAGE} #account name is AccountnameDREAD?
+    - docker build -t $AWS_REPO:TAG . 
     - docker push $AWS_REPO:TAG
   allow_failure: true
 
