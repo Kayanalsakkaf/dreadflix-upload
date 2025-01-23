@@ -1,26 +1,31 @@
+variables:
+  AWS_REPO: ${REGISTRY_IMAGE}/go-lang
+  DOCKER_HOST: tcp://docker:3001
+  CLUSTER_NAME: funny-metal-potato
+  
 stages:
   - build
   - test
-  - deploy
+  - deploy app
 
-build_job:
+#1.0 - Building the docker image and pushing it to AWS ECR Registry
+build:
   stage: build
-  image: amazon/aws-cli:latest
-  variables:
-    REGION: "us-east-1"  # Replace with your AWS region
+  image: 
+    name: amazon/aws-cli
+    entrypoint: [""]
+  services:
+    - docker:dind
+  before_script:
+    - amazon-linux-extras install docker
+    - aws --version
+    - docker --version
   script:
-    - set -x  # Enable verbose logging for debugging
-    - echo "Building the Docker image..."
-    - aws ecr get-login-password --region $REGION | docker login --username AWS --password-stdin 961341555113.dkr.ecr.$REGION.amazonaws.com
-    - echo "ECR login complete."
-    - REPOSITORY_URI=961341555113.dkr.ecr.$REGION.amazonaws.com/upload-service
-    - IMAGE_TAG=build-$CI_COMMIT_SHORT_SHA
-    - docker build -t $REPOSITORY_URI:latest .
-    - echo "build complete."
-    - docker tag $REPOSITORY_URI:latest $REPOSITORY_URI:$IMAGE_TAG
-    - docker push $REPOSITORY_URI:$IMAGE_TAG
-    - echo "Docker image built and pushed successfully."
+    - docker build -t $AWS_REPO:TAG . 
+    - aws ecr get-login-password | docker login --username AWS --password-stdin ${REGISTRY_IMAGE} #account name is AccountnameDREAD?
+    - docker push $AWS_REPO:TAG
 
+#2.0 - Testing the service
 unit-test-job:
   stage: test
   script:
@@ -35,16 +40,28 @@ lint-test-job:
     - sleep 10
     - echo "No lint issues found."
 
-deploy_job:
-  stage: deploy
-  image: amazon/aws-cli:latest
-  variables:
-    EKS_CLUSTER: "funny-metal-potato"  # Replace with your EKS cluster name
-    DEPLOYMENT: "deployment/upload-service-deployment"
-    CONTAINER: "upload-service"
-    NAME_SPACE: "default"
+#3.0 - Deploying the Golang service on AWS-EKS
+deploy app on EKS:
+  stage: deploy app
+  image: 
+    name: amazon/aws-cli
+    entrypoint: [""]
+  services:
+    - docker:dind
+  before_script:
+    - amazon-linux-extras install docker
+    - aws --version
+    - docker --version
+    - curl -O https://s3.us-west-2.amazonaws.com/amazon-eks/1.29.0/2024-01-04/bin/linux/amd64/kubectl
+    - chmod +x ./kubectl
+    - mkdir -p $HOME/bin && cp ./kubectl $HOME/bin/kubectl && export PATH=$HOME/bin:$PATH
+    - echo 'export PATH=$HOME/bin:$PATH' >> ~/.bashrc
+    - kubectl version --client
+    - export AWS_ACCESS_KEY_ID=${AWS_ACCESS_KEY_ID}
+    - export AWS_SECRET_ACCESS_KEY=${AWS_SECRET_ACCESS_KEY}
+    - export AWS_DEFAULT_REGION=${AWS_DEFAULT_REGION}
   script:
-    - echo "Deploying to EKS..."
-    - aws eks update-kubeconfig --name $EKS_CLUSTER --region $REGION 
-    - kubectl set image deployment/$DEPLOYMENT $CONTAINER=$REPOSITORY_URI:$IMAGE_TAG -n $NAME_SPACE  # Use IMAGE_TAG
-    - echo "Application successfully deployed."
+    - aws eks update-kubeconfig --region REGION --name $CLUSTER_NAME
+    - cd kubernetes-files
+    - kubectl apply -f deployment.yaml    #Deploys the docker image
+    - kubectl rollout status deployments
