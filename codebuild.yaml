@@ -23,11 +23,12 @@ phases:
       - docker tag $REPOSITORY_URI:latest $REPOSITORY_URI:$IMAGE_TAG
   post_build:
     commands:
-      - echo Build completed on ⁠ date ⁠
+      - echo Build completed on ⁠ date 
       - docker push $REPOSITORY_URI --all-tags
         # Setup kubectl with our EKS Cluster
       - echo "Update Kube Config"
       - aws eks update-kubeconfig --region us-east-1 --name $EKS_CLUSTER
       - echo "Start the new deployment"
-      - kubectl set image deployment/upload-video-deployment upload-video-svc=$REPOSITORY_URI:961341555113.dkr.ecr.us-east-1.amazonaws.com/upload-service:latest -n default
+      - echo $REPOSITORY_URI
+      # - kubectl set image deployment/upload-service-deployment upload-video-service=$REPOSITORY_URI:961341555113.dkr.ecr.us-east-1.amazonaws.com/upload-service:latest -n default
       - kubectl rollout status deployment/upload-service-deployment
