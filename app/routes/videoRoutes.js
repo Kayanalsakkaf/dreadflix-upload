@@ -5,6 +5,7 @@ const path = require("path");
 const fs = require("fs");
 const VideoController = require("../controllers/video.controller");
 const verify = require("../middleware/verifyToken");
+const { log } = require("console");
 
 // Configure Multer
 const uploadDirectory = path.join(__dirname, "../uploads");
@@ -23,6 +24,7 @@ const upload = multer({
   }),
   fileFilter: (req, file, cb) => {
     if (file.mimetype === "video/mp4") {
+      log(file);
       cb(null, true);
     } else {
       cb(new Error("Invalid file type. Only MP4 files are allowed."), false);
@@ -31,10 +33,10 @@ const upload = multer({
 });
 
 router.post(
-  "/mp4",
+  "/video",
   upload.single("mp4File"),
   verify,
-  VideoController.uploadVideo
+  VideoController.UploadVideo
 );
 
 router.delete("/:id", verify, async (req, res) => {

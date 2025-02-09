@@ -1,21 +1,18 @@
 const { S3Client, PutObjectCommand } = require("@aws-sdk/client-s3");
 const fs = require("fs");
 require("dotenv").config();
+const AWS = require("aws-sdk");
 
-const REGION = process.env.AWS_REGION || "eu-west-2"; // Update the region
-const BUCKET_NAME = process.env.BUCKET_NAME || "mindcast-frontend"; // Set your bucket name in .env
-const ACCESS_KEY_ID = process.env.AWS_ACCESS_KEY_ID || "AKIARM4ZXA2F2DOY2MEH"; // Set your access key ID in .env
-const SECRET_ACCESS_KEY =
-  process.env.AWS_SECRET_ACCESS_KEY ||
-  "5/B7kB01Hd428Blireoi/XyyHWoWA08WZLtdmQge"; // Set your secret access key in .env
+const REGION = process.env.AWS_REGION; // Update the region
+const BUCKET_NAME = process.env.BUCKET_NAME; // Set your bucket name in .env
+const ACCESS_KEY_ID = process.env.AWS_ACCESS_KEY_ID; // Set your access key ID in .env
+const SECRET_ACCESS_KEY = process.env.AWS_SECRET_ACCESS_KEY; // Set your secret access key in .env
 
-// Initialize S3 Client
-const s3Client = new S3Client({
-  region: REGION,
-  credentials: {
-    accessKeyId: ACCESS_KEY_ID,
-    secretAccessKey: SECRET_ACCESS_KEY,
-  },
+// AWS S3 Configuration using Access Key
+const s3 = new AWS.S3({
+  accessKeyId: ACCESS_KEY_ID,
+  secretAccessKey: SECRET_ACCESS_KEY,
+  region: REGION, // Change to your bucket's region
 });
 
 // Function to upload a file to S3
@@ -30,10 +27,11 @@ const uploadToS3 = async (file) => {
     Body: fileStream, // File content
     ContentType: file.mimetype || "video/mp4", // Set the file MIME type
   };
+
   try {
     // Upload the file
-    const command = new PutObjectCommand(params);
-    const response = await s3Client.send(command);
+    const response = await s3.upload(params).promise();
+    //  const response = await s3Client.send(command);
     const fileUrl = `https://${BUCKET_NAME}.s3.amazonaws.com/${key}`;
 
     console.log(`File uploaded successfully.`);
