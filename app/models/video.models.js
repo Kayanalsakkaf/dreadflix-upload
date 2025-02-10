@@ -15,7 +15,7 @@ const videoSchema = new mongoose.Schema(
       type: String,
       required: true,
     },
-    createdBy: { type: Number },
+//    createdBy: { type: Number },
   },
   { timestamps: true }
 );
