@@ -1,4 +1,4 @@
-FROM --platform=linux/amd64 node:22.12.0
+FROM public.ecr.aws/docker/library/node:22.12.0
 WORKDIR /usr/src/app
 COPY package*.json ./
 
