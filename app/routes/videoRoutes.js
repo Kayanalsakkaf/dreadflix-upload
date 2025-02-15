@@ -71,4 +71,7 @@ router.put("/:id", verify, async (req, res) => {
   }
 });
 
+router.get("/", async (req, res) => {
+  res.status(200).json({ status: "Service Up" });
+});
 module.exports = router;
