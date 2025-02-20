@@ -1,35 +1,35 @@
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: upload-service-deployment
+  name: upload-deployment
 spec:
   replicas: 1
   selector:
     matchLabels:
-      app: upload-video-service
+      app: dreadflix-upload-svc
   template:
     metadata:
       labels:
-        app: upload-video-service
+        app: dreadflix-upload-svc
     spec:
       containers:
-      - name: upload-service
-        image: 961341555113.dkr.ecr.us-east-1.amazonaws.com/upload-service:latest
+      - name: dreadflix-upload-svc
+        image: uploadservice.azurecr.io/samples/upload:latest
         ports:
         - containerPort: 3009
 ---
 apiVersion: v1
 kind: Service
 metadata:
-  name: upload-video-service
+  name: dreadflix-upload-svc
   namespace: default
   labels:
-    app: upload-video-service
+    app: dreadflix-upload-svc
 spec:
   selector:
-    app: upload-service
+    app: dreadflix-upload-svc
   ports:
     - protocol: TCP
       port: 3009
       targetPort: 3009
-  type: NodePort
+  type: LoadBalancer
