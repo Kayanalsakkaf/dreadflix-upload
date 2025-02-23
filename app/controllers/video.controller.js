@@ -8,7 +8,7 @@ const VideoController = {
     try {
       const url = await uploadToAzureBlob(req.file);
 
-      if (uploadedFile) {
+      if (url) {
         const video = new Video({
           title,
           desc,
