@@ -1,12 +1,12 @@
 const Video = require("../models/video.models");
-const { uploadToS3 } = require("../services/upload-s3-service");
+const { uploadToAzureBlob } = require("../services/upload-azure-service");
 require("dotenv").config();
 
 const VideoController = {
   UploadVideo: async (req, res) => {
     const { title, desc, category, year, limit, director } = req.body;
     try {
-      const uploadedFile = await uploadToS3(req.file, "dreadflix-videos");
+      const url = await uploadToAzureBlob(req.file);
 
       if (uploadedFile) {
         const video = new Video({
@@ -16,7 +16,7 @@ const VideoController = {
           year,
           limit,
           director,
-          url: uploadedFile.url,
+          url: url,
           createdBy: req.user.id,
         });
         await video.save();
