@@ -18,7 +18,9 @@ jobs:
       - name: Build and Push Docker Image
         run: |
           docker build -t uploadservice.azurecr.io/samples/upload:${{ github.sha }} .
+          docker tag uploadservice.azurecr.io/samples/upload:${{ github.sha }} uploadservice.azurecr.io/samples/upload:latest
           docker push uploadservice.azurecr.io/samples/upload:${{ github.sha }}
+          docker push uploadservice.azurecr.io/samples/upload:latest
 
   deploy:
     needs: build-and-push
